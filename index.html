@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en" data-theme="dusk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1c1b3a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Rise Alarm</title>
+<style>
+:root{--r:22px}
+[data-theme=dusk]{--bg:#1c1b3a;--card:#2a2956;--tx:#f3efe6;--mu:#a9a6d6;--ac:#ffb347;--ink:#1c1b3a;color-scheme:dark}
+[data-theme=mint]{--bg:#e6f2ea;--card:#ffffff;--tx:#12332a;--mu:#5d7f72;--ac:#1f8a6a;--ink:#ffffff;color-scheme:light}
+[data-theme=sun]{--bg:#ffefc2;--card:#fff9e8;--tx:#3a2600;--mu:#8a6f2f;--ac:#e4572e;--ink:#ffffff;color-scheme:light}
+[data-theme=graphite]{--bg:#1e2227;--card:#2a3036;--tx:#eef1f4;--mu:#98a2ad;--ac:#5ec2f2;--ink:#08202e;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--tx);font-family:"Avenir Next","Segoe UI Variable","Segoe UI",system-ui,sans-serif;transition:background .3s}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+main{max-width:480px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 18px 130px}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.gear{width:44px;height:44px;border-radius:50%;background:var(--card);display:grid;place-items:center}
+.gear svg{width:22px;height:22px;stroke:var(--tx);fill:none;stroke-width:1.8}
+.clock{margin:22px 0 4px;font-size:clamp(64px,22vw,96px);font-weight:200;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.clock small{font-size:.28em;font-weight:500;color:var(--ac);margin-left:8px;letter-spacing:0}
+.date{color:var(--mu);font-size:1.02rem}
+.next{margin:26px 0 14px;font-size:1.05rem;font-weight:600}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:var(--r);padding:6px 18px 6px 6px;transition:opacity .2s}
+.row.off{opacity:.55}
+.row-main{flex:1;text-align:left;padding:12px 14px;border-radius:16px;min-width:0}
+.rt{display:block;font-size:2.4rem;font-weight:300;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.rt small{font-size:.4em;font-weight:500;margin-left:6px;color:var(--mu)}
+.rl{display:block;margin-top:4px;color:var(--mu);font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw{position:relative;width:54px;height:32px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.sw i{position:absolute;inset:0;border-radius:99px;background:var(--bg);transition:background .2s;pointer-events:none}
+.sw i::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--mu);transition:transform .2s,background .2s}
+.sw input:checked+i{background:var(--ac)}
+.sw input:checked+i::after{transform:translateX(22px);background:var(--ink)}
+.sw input:focus-visible+i{outline:3px solid var(--tx);outline-offset:2px}
+.empty{background:var(--card);border-radius:var(--r);padding:28px 22px;color:var(--mu);line-height:1.5}
+.empty b{color:var(--tx);display:block;font-size:1.15rem;margin-bottom:6px}
+.fab{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 22px);transform:translateX(-50%);background:var(--ac);color:var(--ink);font-weight:700;font-size:1.05rem;padding:16px 30px;border-radius:99px;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.fab:active{transform:translateX(-50%) scale(.97)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--card);border-radius:30px 30px 0 0;max-height:92vh;overflow:auto;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);padding:22px 20px calc(env(safe-area-inset-bottom) + 22px);max-width:520px;margin:0 auto}
+.sheet.open{transform:translateY(0)}
+.sheet h2{margin:0 0 16px;font-size:1.3rem}
+label.f,.f-title{display:block;margin:18px 0 8px;color:var(--mu);font-size:.95rem}
+input[type=time],input[type=text],select{width:100%;background:var(--bg);color:var(--tx);border:2px solid transparent;border-radius:16px;padding:14px 16px;font:inherit;font-size:1.05rem}
+input[type=time]{font-size:2.6rem;font-weight:300;text-align:center;font-variant-numeric:tabular-nums}
+input:focus-visible,select:focus-visible{outline:none;border-color:var(--ac)}
+.days{display:flex;gap:6px;flex-wrap:wrap}
+.chip{min-width:42px;height:42px;padding:0 12px;border-radius:99px;background:var(--bg);font-weight:600;color:var(--mu)}
+.chip[aria-pressed=true]{background:var(--ac);color:var(--ink)}
+.chip.wide{padding:0 16px}
+.chip:focus-visible,.btn:focus-visible,.fab:focus-visible,.gear:focus-visible,.row-main:focus-visible,.theme:focus-visible{outline:3px solid var(--tx);outline-offset:2px}
+.line{display:flex;gap:10px;align-items:center}
+.line select{flex:1}
+.btn{padding:14px 20px;border-radius:16px;font-weight:700;background:var(--bg)}
+.btn.pri{background:var(--ac);color:var(--ink)}
+.btn.bad{color:#ff7b7b}
+.actions{display:flex;gap:10px;margin-top:24px}
+.actions .pri{flex:1}
+input[type=range]{width:100%;accent-color:var(--ac)}
+.themes{display:flex;gap:12px}
+.theme{width:56px;height:56px;border-radius:50%;border:3px solid transparent;position:relative}
+.theme[aria-pressed=true]{border-color:var(--tx)}
+.hint{color:var(--mu);font-size:.9rem;line-height:1.45;margin:6px 0 0}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0}
+#ring{position:fixed;inset:0;z-index:30;background:var(--ac);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}
+#ringTime{font-size:clamp(64px,24vw,110px);font-weight:300;letter-spacing:-.03em;line-height:1;animation:pulse 1s ease-in-out infinite}
+#ringLabel{font-size:1.4rem;font-weight:600;margin:14px 0 50px}
+#ring .btn{width:100%;max-width:340px;font-size:1.2rem;padding:20px;margin:8px 0;background:var(--ink);color:var(--ac)}
+#ring .btn.ghost{background:transparent;border:2px solid var(--ink);color:var(--ink)}
+@keyframes pulse{50%{transform:scale(1.06)}}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 100px);transform:translate(-50%,20px);background:var(--tx);color:var(--bg);padding:12px 20px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:40;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div>
+      <div class="clock" id="clock"></div>
+      <div class="date" id="date"></div>
+    </div>
+    <button class="gear" id="openSettings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </div>
+  <div class="next" id="next"></div>
+  <ul id="list"></ul>
+</main>
+
+<button class="fab" id="add">+ Add alarm</button>
+
+<div class="scrim" id="scrim"></div>
+
+<!-- Alarm editor -->
+<section class="sheet" id="editSheet" aria-label="Alarm editor">
+  <h2 id="editTitle">New alarm</h2>
+  <input type="time" id="fTime" value="07:00" aria-label="Alarm time">
+  <label class="f" for="fLabel">Label</label>
+  <input type="text" id="fLabel" maxlength="40" placeholder="Wake up, gym, class...">
+  <div class="f-title">Repeat</div>
+  <div class="days" id="fDays"></div>
+  <label class="f" for="fTone">Ringtone</label>
+  <div class="line">
+    <select id="fTone"></select>
+    <button class="btn" id="preview" type="button">Play</button>
+  </div>
+  <div class="actions">
+    <button class="btn bad" id="del" type="button">Delete</button>
+    <button class="btn" id="cancel" type="button">Cancel</button>
+    <button class="btn pri" id="save" type="button">Save</button>
+  </div>
+</section>
+
+<!-- Settings -->
+<section class="sheet" id="setSheet" aria-label="Settings">
+  <h2>Settings</h2>
+  <div class="f-title">Theme</div>
+  <div class="themes" id="themes"></div>
+
+  <label class="f" for="sVol">Alarm volume</label>
+  <input type="range" id="sVol" min="0.1" max="1" step="0.05">
+
+  <label class="f" for="sSnooze">Snooze length</label>
+  <select id="sSnooze">
+    <option value="3">3 minutes</option><option value="5">5 minutes</option><option value="9">9 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option>
+  </select>
+
+  <div class="opt"><span>24-hour clock</span><label class="sw"><input type="checkbox" id="s24"><i></i></label></div>
+  <div class="opt"><span>Keep screen on while app is open</span><label class="sw"><input type="checkbox" id="sWake"><i></i></label></div>
+
+  <div class="f-title">My ringtone</div>
+  <div class="line">
+    <button class="btn" id="pickTone" type="button">Choose a song</button>
+    <button class="btn bad" id="clearTone" type="button" hidden>Remove</button>
+  </div>
+  <input type="file" id="toneFile" accept="audio/*" hidden>
+  <p class="hint" id="toneName">Pick any audio file from your phone to use as an alarm sound.</p>
+
+  <div class="actions"><button class="btn pri" id="closeSet" type="button">Done</button></div>
+  <p class="hint">Alarms ring while Rise is open. Keep the app open with the screen on, and turn the volume up before you sleep.</p>
+</section>
+
+<!-- Ringing screen -->
+<div id="ring" hidden role="alertdialog" aria-live="assertive">
+  <div id="ringTime"></div>
+  <div id="ringLabel"></div>
+  <button class="btn" id="snooze" type="button">Snooze</button>
+  <button class="btn ghost" id="stop" type="button">Stop alarm</button>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, '0');
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+};
+let alarms = store.get('alarms', []);
+let S = Object.assign({ theme: 'dusk', h24: false, vol: 0.8, snooze: 9, wake: true }, store.get('settings', {}));
+const saveAlarms = () => store.set('alarms', alarms);
+const saveS = () => store.set('settings', S);
+
+/* ---------- storage for custom ringtone (IndexedDB) ---------- */
+const DB = new Promise((res, rej) => {
+  const r = indexedDB.open('rise-db', 1);
+  r.onupgradeneeded = () => r.result.createObjectStore('kv');
+  r.onsuccess = () => res(r.result);
+  r.onerror = () => rej(r.error);
+});
+async function kvGet(k) {
+  try { const db = await DB; return await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(); }); } catch { return; }
+}
+async function kvSet(k, v) {
+  try { const db = await DB; return await new Promise(res => { const t = db.transaction('kv', 'readwrite'); v === undefined ? t.objectStore('kv').delete(k) : t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = res; }); } catch {}
+}
+let customUrl = null, customName = '';
+
+/* ---------- sound ---------- */
+const AC = window.AudioContext || window.webkitAudioContext;
+let ctx;
+function ac() { if (!ctx) ctx = new AC(); if (ctx.state === 'suspended') ctx.resume(); return ctx; }
+function note(out, f, t, d, type = 'sine', g = 0.4, f2) {
+  const c = ac(), o = c.createOscillator(), v = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+  v.gain.setValueAtTime(0.0001, t);
+  v.gain.exponentialRampToValueAtTime(g, t + 0.02);
+  v.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(v); v.connect(out); o.start(t); o.stop(t + d + 0.05);
+}
+const PATTERNS = {};
+function P(id, len, fn) { fn.len = len; PATTERNS[id] = fn; }
+P('classic', 2, (t, o) => { for (let i = 0; i < 4; i++) note(o, 880, t + i * 0.3, 0.16, 'square', 0.25); });
+P('chime', 3, (t, o) => { [523, 659, 784, 1047].forEach((f, i) => note(o, f, t + i * 0.35, 1.4, 'sine', 0.4)); });
+P('digital', 1.6, (t, o) => { for (let i = 0; i < 6; i++) note(o, i % 2 ? 1400 : 1000, t + i * 0.14, 0.12, 'square', 0.2); });
+P('rise', 2.2, (t, o) => { note(o, 400, t, 1.6, 'sawtooth', 0.22, 1300); note(o, 400, t + 1.7, 0.01, 'sine', 0.001); });
+P('bells', 3, (t, o) => { [659, 988, 659, 880].forEach((f, i) => { note(o, f, t + i * 0.45, 1.6, 'triangle', 0.35); note(o, f * 2.01, t + i * 0.45, 0.9, 'sine', 0.12); }); });
+const TONES = [['classic', 'Classic beep'], ['chime', 'Soft chime'], ['digital', 'Digital'], ['rise', 'Rising'], ['bells', 'Bells']];
+
+const Ringer = {
+  timer: null, audio: null, out: null,
+  start(id, vol) {
+    this.stop();
+    if (id === 'custom' && customUrl) {
+      const a = new Audio(customUrl); a.loop = true; a.volume = vol; a.play().catch(() => {}); this.audio = a; return;
+    }
+    const c = ac(); this.out = c.createGain(); this.out.gain.value = vol; this.out.connect(c.destination);
+    const p = PATTERNS[id] || PATTERNS.classic;
+    const run = () => p(c.currentTime + 0.05, this.out);
+    run(); this.timer = setInterval(run, p.len * 1000);
+  },
+  stop() {
+    clearInterval(this.timer); this.timer = null;
+    if (this.audio) { this.audio.pause(); this.audio = null; }
+    if (this.out) { try { this.out.disconnect(); } catch {} this.out = null; }
+  }
+};
+document.addEventListener('pointerdown', () => { try { ac(); } catch {} }, { once: true });
+
+/* ---------- helpers ---------- */
+const DAYN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYL = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const esc = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function parts(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  if (S.h24) return { t: pad(h) + ':' + pad(m), ap: '' };
+  return { t: ((h % 12) || 12) + ':' + pad(m), ap: h >= 12 ? 'PM' : 'AM' };
+}
+function daysText(d) {
+  if (!d.length) return 'Once';
+  if (d.length === 7) return 'Every day';
+  const s = [...d].sort().join();
+  if (s === '1,2,3,4,5') return 'Weekdays';
+  if (s === '0,6') return 'Weekends';
+  return [...d].sort().map(x => DAYN[x]).join(', ');
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function toneName(id) {
+  if (id === 'custom') return customUrl ? 'My ringtone' : 'Classic beep';
+  return (TONES.find(t => t[0] === id) || TONES[0])[1];
+}
+
+/* ---------- render ---------- */
+function renderClock(n = new Date()) {
+  let h = n.getHours(), ap = '';
+  if (!S.h24) { ap = h >= 12 ? 'PM' : 'AM'; h = (h % 12) || 12; }
+  else h = pad(h);
+  $('#clock').innerHTML = h + ':' + pad(n.getMinutes()) + (ap ? '<small>' + ap + '</small>' : '');
+  $('#date').textContent = n.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+}
+function nextText() {
+  const now = new Date(); let best = null;
+  for (const a of alarms) {
+    if (!a.on) continue;
+    const [h, m] = a.time.split(':').map(Number);
+    for (let d = 0; d < 8; d++) {
+      const c = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d, h, m, 0, 0);
+      if (c <= now) continue;
+      if (a.days.length && !a.days.includes(c.getDay())) continue;
+      if (!best || c < best) best = c; break;
+    }
+  }
+  if (!best) return 'No alarms on';
+  const mins = Math.round((best - now) / 60000), d = Math.floor(mins / 1440), h = Math.floor(mins % 1440 / 60), m = mins % 60;
+  return 'Next alarm in ' + [d && d + ' d', h && h + ' h', (m || (!d && !h)) && m + ' min'].filter(Boolean).join(' ');
+}
+function renderList() {
+  const ul = $('#list');
+  alarms.sort((a, b) => a.time.localeCompare(b.time));
+  if (!alarms.length) {
+    ul.innerHTML = '<li class="empty"><b>No alarms yet</b>Tap Add alarm to set your first one. You can pick the time, days, and a ringtone.</li>';
+  } else {
+    ul.innerHTML = alarms.map(a => {
+      const p = parts(a.time);
+      return `<li class="row ${a.on ? '' : 'off'}" data-id="${a.id}">
+        <button class="row-main" data-edit="${a.id}" aria-label="Edit alarm ${p.t} ${p.ap}">
+          <span class="rt">${p.t}<small>${p.ap}</small></span>
+          <span class="rl">${a.label ? esc(a.label) + ' - ' : ''}${daysText(a.days)}</span>
+        </button>
+        <label class="sw"><input type="checkbox" data-toggle="${a.id}" ${a.on ? 'checked' : ''} aria-label="Turn alarm on or off"><i></i></label>
+      </li>`;
+    }).join('');
+  }
+  $('#next').textContent = nextText();
+}
+$('#list').addEventListener('click', e => {
+  const ed = e.target.closest('[data-edit]');
+  if (ed) openEdit(alarms.find(a => a.id === ed.dataset.edit));
+});
+$('#list').addEventListener('change', e => {
+  const id = e.target.dataset.toggle; if (!id) return;
+  const a = alarms.find(x => x.id === id); a.on = e.target.checked; saveAlarms(); renderList();
+  if (a.on) { ac(); toast(nextText()); }
+});
+
+/* ---------- sheets ---------- */
+function openSheet(el) { $('#scrim').classList.add('open'); el.classList.add('open'); }
+function closeSheets() { document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open')); $('#scrim').classList.remove('open'); Ringer.stop(); $('#preview').textContent = 'Play'; }
+$('#scrim').onclick = closeSheets;
+
+let editing = null, curDays = [];
+function fillTones() {
+  const opts = TONES.slice(); if (customUrl) opts.push(['custom', 'My ringtone']);
+  $('#fTone').innerHTML = opts.map(t => `<option value="${t[0]}">${t[1]}</option>`).join('');
+}
+function renderDayChips() {
+  $('#fDays').innerHTML = `<button type="button" class="chip wide" data-all aria-pressed="${curDays.length === 7}">Every day</button>` +
+    DAYL.map((l, i) => `<button type="button" class="chip" data-d="${i}" aria-label="${DAYN[i]}" aria-pressed="${curDays.includes(i)}">${l}</button>`).join('');
+}
+$('#fDays').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.hasAttribute('data-all')) curDays = curDays.length === 7 ? [] : [0, 1, 2, 3, 4, 5, 6];
+  else { const d = +b.dataset.d; curDays = curDays.includes(d) ? curDays.filter(x => x !== d) : [...curDays, d]; }
+  renderDayChips();
+});
+function openEdit(a) {
+  editing = a || null; fillTones();
+  $('#editTitle').textContent = a ? 'Edit alarm' : 'New alarm';
+  $('#fTime').value = a ? a.time : '07:00';
+  $('#fLabel').value = a ? a.label : '';
+  curDays = a ? [...a.days] : [0, 1, 2, 3, 4, 5, 6];
+  $('#fTone').value = a ? (a.tone === 'custom' && !customUrl ? 'classic' : a.tone) : 'classic';
+  $('#del').hidden = !a;
+  renderDayChips(); openSheet($('#editSheet'));
+}
+$('#add').onclick = () => { ac(); openEdit(null); };
+$('#cancel').onclick = closeSheets;
+$('#save').onclick = () => {
+  const time = $('#fTime').value; if (!time) { toast('Pick a time first'); return; }
+  const data = { time, label: $('#fLabel').value.trim(), days: [...curDays].sort(), tone: $('#fTone').value, on: true };
+  if (editing) Object.assign(editing, data); else alarms.push({ id: 'a' + Date.now(), ...data });
+  saveAlarms(); renderList(); closeSheets(); toast(nextText());
+  if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+};
+$('#del').onclick = () => { alarms = alarms.filter(a => a !== editing); saveAlarms(); renderList(); closeSheets(); toast('Alarm deleted'); };
+$('#preview').onclick = () => {
+  const b = $('#preview');
+  if (Ringer.timer || Ringer.audio) { Ringer.stop(); b.textContent = 'Play'; return; }
+  Ringer.start($('#fTone').value, S.vol); b.textContent = 'Stop';
+  clearTimeout($('#preview').t); $('#preview').t = setTimeout(() => { Ringer.stop(); b.textContent = 'Play'; }, 4000);
+};
+$('#fTone').onchange = () => { Ringer.stop(); $('#preview').textContent = 'Play'; };
+
+/* ---------- settings ---------- */
+const THEMES = [['dusk', '#ffb347', '#1c1b3a'], ['mint', '#1f8a6a', '#e6f2ea'], ['sun', '#e4572e', '#ffefc2'], ['graphite', '#5ec2f2', '#1e2227']];
+function applyTheme() {
+  document.documentElement.dataset.theme = S.theme;
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  document.querySelector('meta[name=theme-color]').content = bg;
+}
+function renderThemes() {
+  $('#themes').innerHTML = THEMES.map(t => `<button type="button" class="theme" data-t="${t[0]}" aria-label="${t[0]} theme" aria-pressed="${S.theme === t[0]}" style="background:linear-gradient(135deg,${t[2]} 50%,${t[1]} 50%)"></button>`).join('');
+}
+$('#themes').addEventListener('click', e => {
+  const b = e.target.closest('[data-t]'); if (!b) return;
+  S.theme = b.dataset.t; saveS(); applyTheme(); renderThemes();
+});
+function renderToneInfo() {
+  $('#toneName').textContent = customUrl ? 'Using: ' + customName : 'Pick any audio file from your phone to use as an alarm sound.';
+  $('#clearTone').hidden = !customUrl;
+}
+$('#openSettings').onclick = () => {
+  $('#sVol').value = S.vol; $('#sSnooze').value = S.snooze; $('#s24').checked = S.h24; $('#sWake').checked = S.wake;
+  renderThemes(); renderToneInfo(); openSheet($('#setSheet'));
+};
+$('#closeSet').onclick = closeSheets;
+$('#sVol').oninput = e => { S.vol = +e.target.value; saveS(); };
+$('#sVol').onchange = () => { Ringer.start('chime', S.vol); setTimeout(() => Ringer.stop(), 1800); };
+$('#sSnooze').onchange = e => { S.snooze = +e.target.value; saveS(); };
+$('#s24').onchange = e => { S.h24 = e.target.checked; saveS(); renderClock(); renderList(); };
+$('#sWake').onchange = e => { S.wake = e.target.checked; saveS(); applyWake(); };
+$('#pickTone').onclick = () => $('#toneFile').click();
+$('#toneFile').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  await kvSet('tone', f); await kvSet('toneName', f.name);
+  if (customUrl) URL.revokeObjectURL(customUrl);
+  customUrl = URL.createObjectURL(f); customName = f.name; renderToneInfo(); toast('Ringtone saved');
+};
+$('#clearTone').onclick = async () => {
+  await kvSet('tone'); await kvSet('toneName');
+  if (customUrl) URL.revokeObjectURL(customUrl);
+  customUrl = null; customName = ''; renderToneInfo();
+  alarms.forEach(a => { if (a.tone === 'custom') a.tone = 'classic'; }); saveAlarms();
+};
+
+/* ---------- ringing ---------- */
+let ringing = null, snoozeAt = null, snoozeAlarm = null, vib = null;
+const fired = {};
+function ring(a) {
+  ringing = a;
+  const n = new Date();
+  const p = parts(pad(n.getHours()) + ':' + pad(n.getMinutes()));
+  $('#ringTime').textContent = p.t + (p.ap ? ' ' + p.ap : '');
+  $('#ringLabel').textContent = a.label || 'Time to wake up';
+  $('#ring').hidden = false;
+  $('#snooze').textContent = 'Snooze ' + S.snooze + ' min';
+  Ringer.start(a.tone, S.vol);
+  vib = setInterval(() => navigator.vibrate && navigator.vibrate([500, 300, 500]), 2000);
+  if ('Notification' in window && Notification.permission === 'granted' && document.hidden && navigator.serviceWorker) {
+    navigator.serviceWorker.ready.then(r => r.showNotification('Alarm', { body: a.label || 'Time to wake up', tag: 'alarm', requireInteraction: true, vibrate: [300, 150, 300] })).catch(() => {});
+  }
+}
+function stopRing() {
+  Ringer.stop(); clearInterval(vib); navigator.vibrate && navigator.vibrate(0);
+  $('#ring').hidden = true; ringing = null;
+}
+$('#stop').onclick = () => { stopRing(); renderList(); };
+$('#snooze').onclick = () => {
+  snoozeAlarm = ringing; snoozeAt = Date.now() + S.snooze * 60000; stopRing(); toast('Snoozed for ' + S.snooze + ' min');
+};
+
+/* ---------- clock loop ---------- */
+function tick() {
+  const n = new Date(); renderClock(n);
+  if (n.getSeconds() === 0) $('#next').textContent = nextText();
+  if (ringing) return;
+  if (snoozeAt && Date.now() >= snoozeAt) { const a = snoozeAlarm; snoozeAt = null; snoozeAlarm = null; ring(a); return; }
+  const hm = pad(n.getHours()) + ':' + pad(n.getMinutes());
+  for (const a of alarms) {
+    if (!a.on || a.time !== hm) continue;
+    if (a.days.length && !a.days.includes(n.getDay())) continue;
+    const k = a.id + n.toDateString() + hm; if (fired[k]) continue; fired[k] = 1;
+    if (!a.days.length) { a.on = false; saveAlarms(); renderList(); }
+    ring(a); break;
+  }
+}
+
+/* ---------- keep screen on ---------- */
+let wl = null;
+async function applyWake() {
+  try {
+    if (S.wake && 'wakeLock' in navigator && document.visibilityState === 'visible') { wl = await navigator.wakeLock.request('screen'); }
+    else if (wl) { await wl.release(); wl = null; }
+  } catch {}
+}
+document.addEventListener('visibilitychange', () => { applyWake(); tick(); });
+
+/* ---------- start ---------- */
+(async function init() {
+  const blob = await kvGet('tone');
+  if (blob) { customUrl = URL.createObjectURL(blob); customName = (await kvGet('toneName')) || 'My ringtone'; }
+  applyTheme(); renderClock(); renderList(); applyWake();
+  setInterval(tick, 1000);
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
